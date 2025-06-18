@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
   name: "swift-async-broadcaster",
-  platforms: [.iOS(.v18), .macOS(.v15), .tvOS(.v18), .watchOS(.v11), .visionOS(.v2)],
+  platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1)],
   products: [
     .library(
       name: "AsyncBroadcaster",

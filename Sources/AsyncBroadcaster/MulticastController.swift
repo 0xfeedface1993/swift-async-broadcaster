@@ -26,10 +26,10 @@ final class MulticastController<Element: Sendable>: Sendable {
     }
   }
 
-  private let state: Mutex<State>
+  private let state: ManagedCriticalState<State>
 
   func handle(_ event: Event) {
-    let action: @Sendable () -> Void = state.withLock { state in
+    let action: @Sendable () -> Void = state.withCriticalRegion { state in
       switch event {
       case .finish:
         state.finish()

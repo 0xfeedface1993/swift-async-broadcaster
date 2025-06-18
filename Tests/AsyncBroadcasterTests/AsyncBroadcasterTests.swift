@@ -31,7 +31,7 @@ import Testing
       return results
     }
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     channel.continuation.yield(1)
 
@@ -39,7 +39,7 @@ import Testing
 
     channel.continuation.yield(3)
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     channel.continuation.finish()
 
@@ -66,7 +66,7 @@ import Testing
       }
       return results
     }
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
     channel.continuation.yield(1)
 
     channel.continuation.yield(2)
@@ -87,7 +87,7 @@ import Testing
     channel.continuation.yield(42)
     var results: [Int] = []
     Task {
-      try await Task.sleep(for: .milliseconds(200))
+      try await sleep(200)
       channel.continuation.finish()
     }
     for await value in channel.stream {
@@ -108,7 +108,7 @@ import Testing
       return results
     }
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     channel.continuation.yield(1)
     channel.continuation.yield(2)
@@ -137,13 +137,13 @@ import Testing
       var results: [Int] = []
 
       for await value in channel.stream {
-        try? await Task.sleep(for: .milliseconds(100))
+        try await sleep(100)
         results.append(value)
       }
       return results
     }
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     channel.continuation.yield(1)
     channel.continuation.yield(2)
@@ -152,7 +152,7 @@ import Testing
     channel.continuation.finish()
 
     let results1 = await task1.value
-    let results2 = await task2.value
+    let results2 = try await task2.value
 
     #expect(results1 == [1, 2, 3])
     #expect(results2 == [1, 2, 3])
@@ -163,7 +163,7 @@ import Testing
 
     channel.continuation.yield(42)
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     let task = Task {
       var results: [Int] = []
@@ -174,7 +174,7 @@ import Testing
       return results
     }
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     channel.continuation.yield(99)
 
@@ -201,7 +201,7 @@ import Testing
     }
 
     await sem.wait()
-    try await Task.sleep(for: .milliseconds(200))
+    try await sleep(200)
 
     subject.continuation.yield(99)
 
@@ -221,12 +221,12 @@ import Testing
       for await value in subject.stream {
         results.append(value)
 
-        try await Task.sleep(for: .milliseconds(10))
+        try await sleep(10)
       }
       return results
     }
 
-    try await Task.sleep(for: .milliseconds(100))
+    try await sleep(100)
 
     subject.continuation.yield(1)
     subject.continuation.yield(2)
@@ -453,4 +453,13 @@ import Testing
 
   }
 
+}
+
+func sleep(_ milliseconds: UInt64) async throws {
+    if #available(iOS 16.0, macOS 13, *) {
+        try await Task.sleep(for: .milliseconds(milliseconds))
+    } else {
+        // Fallback on earlier versions
+        try await Task.sleep(nanoseconds: milliseconds * (10 ^ 6))
+    }
 }
