@@ -11,7 +11,7 @@ final class MulticastController<Element: Sendable>: Sendable {
     case finish
   }
 
-  init<S: AsyncSequence>(_ sequence: sending S, replay: AsyncBuffer) where S.Element == Event {
+    init<S: AsyncSequence>(_ sequence: sending S, replay: AsyncBuffer) where S.Element == Event, S.AsyncIterator: SendableMetatype, S: SendableMetatype {
     self.state = .init(.available(.init(replayCapacity: replay, replay: [], continuations: [:])))
     Task(priority: .high) { [weak self] in
       do {
