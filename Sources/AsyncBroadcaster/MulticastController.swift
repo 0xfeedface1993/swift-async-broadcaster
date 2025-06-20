@@ -10,21 +10,38 @@ final class MulticastController<Element: Sendable>: Sendable {
     case publish(Element)
     case finish
   }
-
+    
+#if swift(>=6.2)
     init<S: AsyncSequence>(_ sequence: sending S, replay: AsyncBuffer) where S.Element == Event, S.AsyncIterator: SendableMetatype, S: SendableMetatype {
-    self.state = .init(.available(.init(replayCapacity: replay, replay: [], continuations: [:])))
-    Task(priority: .high) { [weak self] in
-      do {
-        for try await event in sequence {
-          guard let self else { return }
-          self.handle(event)
+        self.state = .init(.available(.init(replayCapacity: replay, replay: [], continuations: [:])))
+        Task(priority: .high) { [weak self] in
+            do {
+                for try await event in sequence {
+                    guard let self else { return }
+                    self.handle(event)
+                }
+                self?.handle(.finish)
+            } catch {
+                self?.handle(.finish)
+            }
         }
-        self?.handle(.finish)
-      } catch {
-        self?.handle(.finish)
-      }
     }
-  }
+#else
+    init<S: AsyncSequence>(_ sequence: sending S, replay: AsyncBuffer) where S.Element == Event {
+        self.state = .init(.available(.init(replayCapacity: replay, replay: [], continuations: [:])))
+        Task(priority: .high) { [weak self] in
+            do {
+                for try await event in sequence {
+                    guard let self else { return }
+                    self.handle(event)
+                }
+                self?.handle(.finish)
+            } catch {
+                self?.handle(.finish)
+            }
+        }
+    }
+#endif
 
   private let state: ManagedCriticalState<State>
 
